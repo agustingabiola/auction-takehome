@@ -16,6 +16,7 @@ export const STARTING_PRICE = 1200;
 export const MIN_INCREMENT = 50;
 export const DEFAULT_DURATION_MS = 3 * 60_000;
 export const TIMER_STEP_MS = 30_000;
+export const BID_EXTENSION_MS = 30_000;
 export const SOFT_CLOSE_MS = 15_000;
 
 export const PROPERTY = {
@@ -122,7 +123,12 @@ export function reduce(state: Auction, event: AuctionEvent, ctx: Ctx): ReduceRes
       };
       return {
         ok: true,
-        state: { ...state, version: state.version + 1, bids: [...state.bids, placed] },
+        state: {
+          ...state,
+          version: state.version + 1,
+          endsAt: state.endsAt + BID_EXTENSION_MS,
+          bids: [...state.bids, placed],
+        },
       };
     }
     case "BID_CANCELLED": {

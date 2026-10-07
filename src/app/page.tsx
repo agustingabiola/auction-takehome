@@ -19,8 +19,6 @@ export default function Home() {
             <Link
               key={id}
               href={`/bid/${id}`}
-              target="_blank"
-              rel="noopener"
               className="rounded-md bg-sand py-4 text-center font-medium transition-transform hover:bg-sand-deep active:scale-[0.97] motion-reduce:transition-none"
             >
               {BIDDERS[id].name}
@@ -30,8 +28,6 @@ export default function Home() {
       </section>
       <Link
         href="/auctioneer"
-        target="_blank"
-        rel="noopener"
         className="rounded-md bg-ink py-4 text-center font-medium text-paper transition-transform hover:bg-accent hover:text-white active:scale-[0.97] motion-reduce:transition-none"
       >
         Auctioneer

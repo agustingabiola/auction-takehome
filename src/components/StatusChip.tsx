@@ -16,9 +16,9 @@ const LABEL: Record<ChipKind, string> = {
 
 const TONE: Record<ChipKind, string> = {
   watching: "bg-sand text-ink",
-  leading: "bg-accent text-white",
+  leading: "bg-success text-white",
   outbid: "bg-warn text-white",
-  won: "bg-accent text-white",
+  won: "bg-success text-white",
   lost: "bg-sand-deep text-ink",
   ended: "bg-sand-deep text-ink",
 };

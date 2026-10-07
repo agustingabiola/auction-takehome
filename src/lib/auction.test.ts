@@ -6,6 +6,7 @@ import {
   STARTING_PRICE,
   MIN_INCREMENT,
   DEFAULT_DURATION_MS,
+  BID_EXTENSION_MS,
   type Auction,
   type Ctx,
   type Bid,
@@ -158,6 +159,28 @@ describe("reduce", () => {
       expect(
         reduce(a, { type: "BID_PLACED", bidder: "agustin", amount: 9_000_000 }, ctxAt(0)).ok,
       ).toBe(true);
+    });
+
+    it("adds BID_EXTENSION_MS to the clock on every accepted bid, and nothing on a rejection", () => {
+      const first = reduce(
+        live(),
+        { type: "BID_PLACED", bidder: "gaspar", amount: 1200 },
+        ctxAt(1_000),
+      );
+      expect(first.state.endsAt).toBe(100_000 + BID_EXTENSION_MS);
+      const second = reduce(
+        first.state,
+        { type: "BID_PLACED", bidder: "agustin", amount: 1250 },
+        ctxAt(2_000),
+      );
+      expect(second.state.endsAt).toBe(100_000 + 2 * BID_EXTENSION_MS);
+      const rejected = reduce(
+        second.state,
+        { type: "BID_PLACED", bidder: "gaspar", amount: 1260 },
+        ctxAt(3_000),
+      );
+      expect(rejected.ok).toBe(false);
+      expect(rejected.state.endsAt).toBe(100_000 + 2 * BID_EXTENSION_MS);
     });
 
     it("lets the leader raise their own bid", () => {

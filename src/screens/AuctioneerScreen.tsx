@@ -10,6 +10,7 @@ import { EndedBanner } from "@/components/EndedBanner";
 import { HistoryPanel } from "@/components/HistoryPanel";
 import { PropertyCard } from "@/components/PropertyCard";
 import { RollingNumber } from "@/components/RollingNumber";
+import { priceSizeClass } from "@/components/priceSize";
 import { Toasts } from "@/components/Toasts";
 
 const CONFIRM_WINDOW_MS = 3_000;
@@ -53,21 +54,20 @@ export function AuctioneerScreen() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 px-4 py-6">
       <header className="flex items-center justify-between text-sm text-ink-soft">
-        <span className="flex items-center gap-3">
-          <Link href="/" className="text-ink-soft hover:text-ink">
-            Home
-          </Link>
+        <span>
           <strong className="text-ink">Auctioneer</strong>
         </span>
         {derived?.status !== "ended" && <ConnectionDot connection={connection} />}
       </header>
       <PropertyCard />
-      <section className="flex items-end justify-between">
-        <div>
+      <section className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+        <div className="min-w-0">
           <span className="text-xs text-ink-soft">
             {derived?.topBid ? "Current bid" : "Starting at"}
           </span>
-          <div className="text-6xl font-semibold leading-none text-accent">
+          <div
+            className={`${derived ? priceSizeClass(derived.currentPrice) : "text-6xl"} font-semibold leading-none text-accent`}
+          >
             {derived ? (
               <RollingNumber value={derived.currentPrice} format={formatMoney} />
             ) : (
@@ -122,6 +122,12 @@ export function AuctioneerScreen() {
           {confirmingReset ? "Confirm reset" : "Reset auction"}
         </button>
       </section>
+      <Link
+        href="/"
+        className="mt-8 self-center text-xs text-ink-soft underline-offset-4 hover:text-ink hover:underline"
+      >
+        Back to home
+      </Link>
       <HistoryPanel
         open={panelOpen}
         bids={snapshot?.auction.bids ?? []}

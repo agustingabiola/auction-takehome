@@ -1,6 +1,6 @@
 "use client";
-import { motion, useReducedMotion } from "motion/react";
-import { useCallback, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useCallback, useEffect, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import type { DispatchResult } from "@/lib/client/useAuction";
 import {
@@ -19,6 +19,10 @@ import { fast } from "./motion";
 // for at least this long before the bid is sent, so the moment reads as a real
 // submission rather than an instant flip.
 const MOCK_PLACEMENT_MS = 4_000;
+// How long the button stays fully green with "Bid placed" after a success.
+const PLACED_HOLD_MS = 3_000;
+// The fill creeps toward this fraction while the call is out, then snaps to 1.
+const FILL_WHILE_WAITING = 0.9;
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 type Props = {
@@ -44,6 +48,14 @@ export function BidControls({ minimumBid, currentPrice, isLeader, ended, onBid }
   const setInput = (next: typeof input) => setField({ seenMin: minimumBid, input: next });
 
   const [pending, setPending] = useState(false);
+  // Drives the button choreography: a green fill creeps across while the call
+  // is out, completes the instant the server confirms, holds, then settles back.
+  const [phase, setPhase] = useState<"idle" | "placing" | "placed">("idle");
+  useEffect(() => {
+    if (phase !== "placed") return;
+    const t = setTimeout(() => setPhase("idle"), PLACED_HOLD_MS);
+    return () => clearTimeout(t);
+  }, [phase]);
   const [confirming, setConfirming] = useState(false);
   const cancelConfirm = useCallback(() => setConfirming(false), []);
 
@@ -54,9 +66,11 @@ export function BidControls({ minimumBid, currentPrice, isLeader, ended, onBid }
   const place = async () => {
     if (amount === null) return;
     setPending(true);
+    setPhase("placing");
     await sleep(MOCK_PLACEMENT_MS);
     const result = await onBid(amount);
     setPending(false);
+    setPhase(result.ok ? "placed" : "idle");
     if (result.ok) setInput(afterAcceptedBid(minimumBid));
   };
 
@@ -95,9 +109,41 @@ export function BidControls({ minimumBid, currentPrice, isLeader, ended, onBid }
         disabled={disabled}
         whileTap={reduced || disabled ? undefined : { scale: 0.97 }}
         transition={fast}
-        className="w-full rounded-md bg-accent py-3 text-base font-medium text-white disabled:bg-sand-deep disabled:text-ink-soft"
+        className={`relative w-full overflow-hidden rounded-md py-3 text-base font-medium ${
+          phase === "placing"
+            ? "bg-sand-deep text-white"
+            : phase === "placed"
+              ? "bg-success text-white"
+              : "bg-accent text-white disabled:bg-sand-deep disabled:text-ink-soft"
+        }`}
       >
-        {ended ? "Auction ended" : pending ? "Placing…" : "Place bid"}
+        <AnimatePresence>
+          {phase !== "idle" && (
+            <motion.span
+              aria-hidden
+              className="absolute inset-y-0 left-0 w-full origin-left bg-success"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: phase === "placed" ? 1 : FILL_WHILE_WAITING }}
+              exit={{ opacity: 0 }}
+              transition={
+                reduced
+                  ? { duration: 0 }
+                  : phase === "placed"
+                    ? { duration: 0.15, ease: "easeOut" }
+                    : { duration: (MOCK_PLACEMENT_MS + 1_000) / 1000, ease: "easeOut" }
+              }
+            />
+          )}
+        </AnimatePresence>
+        <span className="relative">
+          {ended
+            ? "Auction ended"
+            : phase === "placing"
+              ? "Placing…"
+              : phase === "placed"
+                ? "Bid placed"
+                : "Place bid"}
+        </span>
       </motion.button>
       <ConfirmDialog
         open={confirming}

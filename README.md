@@ -6,8 +6,8 @@ A single property, several bidders each in their own tab or on their own device,
 
 ## Sixty-second demo
 
-1. Open the URL and press **Auctioneer**. It opens in its own tab.
-2. Back on the landing page, open **Gaspar** and **Agustin**. Each opens in its own tab, and a phone works just as well.
+1. Open the URL and press **Auctioneer**.
+2. Open the URL in two more tabs, or on a phone, and pick **Gaspar** in one and **Agustin** in the other.
 3. Watch the price roll on every screen, the other bidder get an _Outbid_ alert, and the history fill in.
 4. From the auctioneer, open **History** and cancel the top bid: the price rolls back down and the leader changes.
 5. Use **−30 s** / **+30 s** and **Reset auction**.

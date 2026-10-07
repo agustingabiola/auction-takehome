@@ -23,6 +23,10 @@ export function useAuction(me: BidderId | null) {
   const snapshotRef = useRef<Snapshot | null>(null);
   const offsetRef = useRef(0);
   const reconcileRef = useRef<() => void>(() => {});
+  // True while one of this bidder's own events is in flight. The stream can
+  // deliver the resulting snapshot before the POST response, and that must not
+  // read as "leading again" from a remote change.
+  const selfInFlightRef = useRef(false);
 
   const pushAlerts = useCallback((items: QueuedAlert["alert"][]) => {
     if (items.length === 0) return;
@@ -34,7 +38,8 @@ export function useAuction(me: BidderId | null) {
       const prev = snapshotRef.current;
       if (!shouldAccept(prev?.auction ?? null, incoming.auction)) return;
       offsetRef.current = computeOffset(incoming.now, Date.now());
-      const fresh = deriveAlerts(prev, incoming, me, source);
+      const effectiveSource = source === "self" || selfInFlightRef.current ? "self" : "remote";
+      const fresh = deriveAlerts(prev, incoming, me, effectiveSource);
       snapshotRef.current = incoming;
       setSnapshot(incoming);
       pushAlerts(fresh);
@@ -133,6 +138,7 @@ export function useAuction(me: BidderId | null) {
 
   const dispatch = useCallback(
     async (event: AuctionEvent): Promise<DispatchResult> => {
+      selfInFlightRef.current = true;
       try {
         const r = await fetch(SNAPSHOT_URL, {
           method: "POST",
@@ -155,6 +161,8 @@ export function useAuction(me: BidderId | null) {
         return data.ok ? { ok: true } : { ok: false, reason: data.reason ?? "Bid rejected" };
       } catch {
         return { ok: false, reason: "Could not reach the auction" };
+      } finally {
+        selfInFlightRef.current = false;
       }
     },
     [apply],

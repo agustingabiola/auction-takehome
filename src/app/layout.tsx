@@ -6,7 +6,7 @@ const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
 
 export const metadata: Metadata = {
   title: "Auction Demo",
-  description: "Live bidding on one property, with care taken over how the numbers move.",
+  description: "Live bidding on one property",
 };
 
 export const viewport: Viewport = {

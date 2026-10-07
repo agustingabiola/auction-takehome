@@ -11,6 +11,7 @@ import { Countdown } from "@/components/Countdown";
 import { EndedBanner } from "@/components/EndedBanner";
 import { PropertyCard } from "@/components/PropertyCard";
 import { RollingNumber } from "@/components/RollingNumber";
+import { priceSizeClass } from "@/components/priceSize";
 import { StatusChip, type ChipKind } from "@/components/StatusChip";
 import { Toasts } from "@/components/Toasts";
 
@@ -42,41 +43,40 @@ export function BidderScreen({ bidder }: { bidder: BidderId }) {
           ? "outbid"
           : "watching";
 
+  // The chip already says "You're leading", so the line only names someone else
+  // or the empty state; its height is reserved so the row never shifts.
   const leaderLine = !derived
     ? ""
     : derived.leader === null
       ? "No bids yet"
       : derived.leader === bidder
-        ? "You're leading"
+        ? ""
         : `${BIDDERS[derived.leader].name} is leading`;
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-6 px-4 py-6">
       <header className="flex items-center justify-between text-sm text-ink-soft">
-        <span className="flex items-center gap-3">
-          <Link href="/" className="text-ink-soft hover:text-ink">
-            Home
-          </Link>
-          <span>
-            Bidding as <strong className="text-ink">{BIDDERS[bidder].name}</strong>
-          </span>
+        <span>
+          Bidding as <strong className="text-ink">{BIDDERS[bidder].name}</strong>
         </span>
         {derived?.status !== "ended" && <ConnectionDot connection={connection} />}
       </header>
       <PropertyCard />
-      <section className="flex items-end justify-between">
-        <div>
+      <section className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+        <div className="min-w-0">
           <span className="text-xs text-ink-soft">
             {derived?.topBid ? "Current bid" : "Starting at"}
           </span>
-          <div className="text-6xl font-semibold leading-none text-accent">
+          <div
+            className={`${derived ? priceSizeClass(derived.currentPrice) : "text-6xl"} font-semibold leading-none text-accent`}
+          >
             {derived ? (
               <RollingNumber value={derived.currentPrice} format={formatMoney} />
             ) : (
               <span className="inline-block h-14 w-48 animate-pulse rounded bg-sand" />
             )}
           </div>
-          <p className="mt-2 text-sm text-ink-soft" aria-live="polite">
+          <p className="mt-2 min-h-5 text-sm text-ink-soft" aria-live="polite">
             {leaderLine}
           </p>
         </div>
@@ -102,6 +102,12 @@ export function BidderScreen({ bidder }: { bidder: BidderId }) {
         />
       )}
       {snapshot && <BidHistory bids={snapshot.auction.bids} now={now} me={bidder} />}
+      <Link
+        href="/"
+        className="mt-8 self-center text-xs text-ink-soft underline-offset-4 hover:text-ink hover:underline"
+      >
+        Back to home
+      </Link>
       <Toasts items={alerts} onDismiss={dismissAlert} />
     </main>
   );
