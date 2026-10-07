@@ -27,10 +27,10 @@ export function bid(partial: Partial<Bid> & Pick<Bid, "bidder" | "amount">): Bid
 
 describe("isBidderId", () => {
   it("accepts the three bidders and rejects everything else", () => {
-    expect(isBidderId("bob")).toBe(true);
-    expect(isBidderId("alice")).toBe(true);
-    expect(isBidderId("randy")).toBe(true);
-    expect(isBidderId("Bob")).toBe(false);
+    expect(isBidderId("gaspar")).toBe(true);
+    expect(isBidderId("agustin")).toBe(true);
+    expect(isBidderId("belen")).toBe(true);
+    expect(isBidderId("Gaspar")).toBe(false);
     expect(isBidderId("toString")).toBe(false);
     expect(isBidderId(42)).toBe(false);
   });
@@ -75,11 +75,11 @@ describe("derive", () => {
   it("with bids: top active bid wins, minimum is top plus increment", () => {
     const a = {
       ...base,
-      bids: [bid({ bidder: "bob", amount: 1200 }), bid({ bidder: "alice", amount: 1300 })],
+      bids: [bid({ bidder: "gaspar", amount: 1200 }), bid({ bidder: "agustin", amount: 1300 })],
     };
     const d = derive(a, 0);
     expect(d.currentPrice).toBe(1300);
-    expect(d.leader).toBe("alice");
+    expect(d.leader).toBe("agustin");
     expect(d.minimumBid).toBe(1350);
     expect(d.activeBids).toHaveLength(2);
   });
@@ -88,21 +88,21 @@ describe("derive", () => {
     const a = {
       ...base,
       bids: [
-        bid({ bidder: "bob", amount: 1200 }),
-        bid({ bidder: "alice", amount: 1300, cancelled: true }),
+        bid({ bidder: "gaspar", amount: 1200 }),
+        bid({ bidder: "agustin", amount: 1300, cancelled: true }),
       ],
     };
     const d = derive(a, 0);
     expect(d.currentPrice).toBe(1200);
-    expect(d.leader).toBe("bob");
+    expect(d.leader).toBe("gaspar");
   });
 
   it("cancelling a middle bid keeps the top bid", () => {
     const a = {
       ...base,
       bids: [
-        bid({ bidder: "bob", amount: 1200, cancelled: true }),
-        bid({ bidder: "alice", amount: 1300 }),
+        bid({ bidder: "gaspar", amount: 1200, cancelled: true }),
+        bid({ bidder: "agustin", amount: 1300 }),
       ],
     };
     expect(derive(a, 0).currentPrice).toBe(1300);
@@ -129,62 +129,66 @@ describe("reduce", () => {
 
   describe("BID_PLACED", () => {
     it("accepts an opening bid equal to the starting price", () => {
-      const r = reduce(live(), { type: "BID_PLACED", bidder: "bob", amount: 1200 }, ctxAt(1_000));
+      const r = reduce(
+        live(),
+        { type: "BID_PLACED", bidder: "gaspar", amount: 1200 },
+        ctxAt(1_000),
+      );
       expect(r.ok).toBe(true);
       expect(r.state.version).toBe(4);
       expect(r.state.bids).toEqual([
-        { id: "id-1", bidder: "bob", amount: 1200, at: 1_000, cancelled: false },
+        { id: "id-1", bidder: "gaspar", amount: 1200, at: 1_000, cancelled: false },
       ]);
     });
 
     it("rejects an opening bid below the starting price", () => {
-      const r = reduce(live(), { type: "BID_PLACED", bidder: "bob", amount: 1150 }, ctxAt(0));
+      const r = reduce(live(), { type: "BID_PLACED", bidder: "gaspar", amount: 1150 }, ctxAt(0));
       expect(r).toMatchObject({ ok: false, reason: "Minimum bid is $1,200" });
       expect(r.state.version).toBe(3);
     });
 
     it("requires at least the increment above the top active bid", () => {
-      const a = { ...live(), bids: [bid({ bidder: "bob", amount: 1200 })] };
+      const a = { ...live(), bids: [bid({ bidder: "gaspar", amount: 1200 })] };
       expect(
-        reduce(a, { type: "BID_PLACED", bidder: "alice", amount: 1249 }, ctxAt(0)),
+        reduce(a, { type: "BID_PLACED", bidder: "agustin", amount: 1249 }, ctxAt(0)),
       ).toMatchObject({ ok: false, reason: "Minimum bid is $1,250" });
-      expect(reduce(a, { type: "BID_PLACED", bidder: "alice", amount: 1250 }, ctxAt(0)).ok).toBe(
+      expect(reduce(a, { type: "BID_PLACED", bidder: "agustin", amount: 1250 }, ctxAt(0)).ok).toBe(
         true,
       );
       expect(
-        reduce(a, { type: "BID_PLACED", bidder: "alice", amount: 9_000_000 }, ctxAt(0)).ok,
+        reduce(a, { type: "BID_PLACED", bidder: "agustin", amount: 9_000_000 }, ctxAt(0)).ok,
       ).toBe(true);
     });
 
     it("lets the leader raise their own bid", () => {
-      const a = { ...live(), bids: [bid({ bidder: "bob", amount: 1200 })] };
-      expect(reduce(a, { type: "BID_PLACED", bidder: "bob", amount: 1250 }, ctxAt(0)).ok).toBe(
+      const a = { ...live(), bids: [bid({ bidder: "gaspar", amount: 1200 })] };
+      expect(reduce(a, { type: "BID_PLACED", bidder: "gaspar", amount: 1250 }, ctxAt(0)).ok).toBe(
         true,
       );
     });
 
     it("rejects non-integer amounts", () => {
       expect(
-        reduce(live(), { type: "BID_PLACED", bidder: "bob", amount: 1250.5 }, ctxAt(0)),
+        reduce(live(), { type: "BID_PLACED", bidder: "gaspar", amount: 1250.5 }, ctxAt(0)),
       ).toMatchObject({ ok: false, reason: "Minimum bid is $1,200" });
       expect(
-        reduce(live(), { type: "BID_PLACED", bidder: "bob", amount: Number.NaN }, ctxAt(0)).ok,
+        reduce(live(), { type: "BID_PLACED", bidder: "gaspar", amount: Number.NaN }, ctxAt(0)).ok,
       ).toBe(false);
     });
 
     it("rejects bids at or after endsAt", () => {
       expect(
-        reduce(live(), { type: "BID_PLACED", bidder: "bob", amount: 1200 }, ctxAt(100_000)),
+        reduce(live(), { type: "BID_PLACED", bidder: "gaspar", amount: 1200 }, ctxAt(100_000)),
       ).toMatchObject({ ok: false, reason: "Auction has ended" });
       expect(
-        reduce(live(), { type: "BID_PLACED", bidder: "bob", amount: 1200 }, ctxAt(99_999)).ok,
+        reduce(live(), { type: "BID_PLACED", bidder: "gaspar", amount: 1200 }, ctxAt(99_999)).ok,
       ).toBe(true);
     });
   });
 
   describe("BID_CANCELLED", () => {
     it("marks the bid cancelled and bumps the version", () => {
-      const a = { ...live(), bids: [bid({ id: "x", bidder: "bob", amount: 1200 })] };
+      const a = { ...live(), bids: [bid({ id: "x", bidder: "gaspar", amount: 1200 })] };
       const r = reduce(a, { type: "BID_CANCELLED", bidId: "x" }, ctxAt(0));
       expect(r.ok).toBe(true);
       expect(r.state.bids[0].cancelled).toBe(true);
@@ -194,7 +198,7 @@ describe("reduce", () => {
     it("rejects unknown and already cancelled bids", () => {
       const a = {
         ...live(),
-        bids: [bid({ id: "x", bidder: "bob", amount: 1200, cancelled: true })],
+        bids: [bid({ id: "x", bidder: "gaspar", amount: 1200, cancelled: true })],
       };
       expect(reduce(a, { type: "BID_CANCELLED", bidId: "nope" }, ctxAt(0))).toMatchObject({
         ok: false,
@@ -207,7 +211,7 @@ describe("reduce", () => {
     });
 
     it("works after the auction has ended", () => {
-      const a = { ...live(), bids: [bid({ id: "x", bidder: "bob", amount: 1200 })] };
+      const a = { ...live(), bids: [bid({ id: "x", bidder: "gaspar", amount: 1200 })] };
       expect(reduce(a, { type: "BID_CANCELLED", bidId: "x" }, ctxAt(500_000)).ok).toBe(true);
     });
   });
@@ -243,7 +247,7 @@ describe("reduce", () => {
 
   describe("RESET", () => {
     it("starts a fresh auction with a new id and a higher version", () => {
-      const a = { ...live(), bids: [bid({ bidder: "bob", amount: 1200 })] };
+      const a = { ...live(), bids: [bid({ bidder: "gaspar", amount: 1200 })] };
       const r = reduce(a, { type: "RESET" }, ctxAt(5_000));
       expect(r.ok).toBe(true);
       expect(r.state.id).toBe("id-1");

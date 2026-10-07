@@ -82,9 +82,13 @@ export function useAuction(me: BidderId | null) {
         if (statusNow() === "ended") {
           closeStream();
           reconcile();
-        } else {
-          setConnection("reconnecting");
+          return;
         }
+        setConnection("reconnecting");
+        // A non-200 or non-event-stream response fails the connection for good
+        // (readyState CLOSED, no browser retry). Drop it so the next reconcile
+        // tick opens a fresh one.
+        if (es && es.readyState === EventSource.CLOSED) closeStream();
       };
     };
 

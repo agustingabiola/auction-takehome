@@ -13,7 +13,6 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 
 export async function GET(request: Request) {
   await connection();
-  const store = getStore();
   const encoder = new TextEncoder();
   let cancelled = false;
 
@@ -27,6 +26,7 @@ export async function GET(request: Request) {
         lastWrite = Date.now();
       };
       try {
+        const store = getStore();
         write(RETRY_LINE);
         while (!cancelled && !request.signal.aborted && Date.now() - started < LIFETIME_MS) {
           const auction = await store.read();

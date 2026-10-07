@@ -1,5 +1,6 @@
 "use client";
-import { motion, useReducedMotion } from "motion/react";
+import { motion, useAnimate, useReducedMotion } from "motion/react";
+import { useEffect } from "react";
 import { RollingNumber } from "./RollingNumber";
 import { clockSeconds, secondsToClock } from "@/lib/format";
 import { base } from "./motion";
@@ -13,23 +14,31 @@ export function Countdown({ remainingMs }: { remainingMs: number }) {
   const ended = secs === 0;
   const warn = secs <= WARN_S && !ended;
   const pulse = secs <= PULSE_S && !ended && !reduced;
+
+  // The pulse is driven imperatively on a stable element so RollingNumber stays
+  // mounted and keeps rolling through the final seconds.
+  const [scope, animate] = useAnimate();
+  useEffect(() => {
+    if (!pulse) return;
+    animate(scope.current, { scale: [1, 1.04, 1] }, { duration: 0.4, ease: "easeOut" });
+  }, [secs, pulse, animate, scope]);
+
   return (
     <div className="flex flex-col items-end">
       <span className="text-xs text-ink-soft">{ended ? "Ended" : "Time left"}</span>
-      <motion.span
-        key={pulse ? secs : "steady"}
-        animate={pulse ? { scale: [1, 1.04, 1] } : { scale: 1 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-        className="inline-block"
-      >
+      <span ref={scope} className="inline-block">
         <motion.span
-          animate={{ color: warn ? "#b4541a" : "#17171a" }}
+          animate={{ color: warn ? "#f79009" : "#ffffff" }}
           transition={base}
           className="inline-block"
         >
-          <RollingNumber value={secs} format={secondsToClock} className="text-4xl font-semibold" />
+          <RollingNumber
+            value={secs}
+            format={secondsToClock}
+            className="text-4xl font-semibold leading-none"
+          />
         </motion.span>
-      </motion.span>
+      </span>
     </div>
   );
 }

@@ -9,7 +9,7 @@ const LABEL: Record<Connection, string> = {
 
 const DOT: Record<Connection, string> = {
   connecting: "bg-sand-deep",
-  live: "bg-oxblood",
+  live: "bg-accent",
   reconnecting: "bg-warn",
   paused: "bg-sand-deep",
 };

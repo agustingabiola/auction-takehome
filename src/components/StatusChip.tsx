@@ -1,6 +1,6 @@
 "use client";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useState } from "react";
+import { AnimatePresence, motion, useAnimate, useReducedMotion } from "motion/react";
+import { useEffect, useState } from "react";
 import { base, reducedFade, SHAKE_X, shakeTransition } from "./motion";
 
 export type ChipKind = "watching" | "leading" | "outbid" | "won" | "lost" | "ended";
@@ -16,27 +16,31 @@ const LABEL: Record<ChipKind, string> = {
 
 const TONE: Record<ChipKind, string> = {
   watching: "bg-sand text-ink",
-  leading: "bg-oxblood text-paper",
-  outbid: "bg-warn text-paper",
-  won: "bg-oxblood text-paper",
+  leading: "bg-accent text-white",
+  outbid: "bg-warn text-white",
+  won: "bg-accent text-white",
   lost: "bg-sand-deep text-ink",
   ended: "bg-sand-deep text-ink",
 };
 
 export function StatusChip({ kind }: { kind: ChipKind }) {
   const reduced = useReducedMotion();
-  // Count arrivals at "outbid" during render (state from the previous render)
-  // so the shake re-triggers on every re-entry without an effect.
+  // Count arrivals at "outbid" during render (state from the previous render).
+  // Mounting already outbid counts as zero, so a reload never shakes.
   const [tracked, setTracked] = useState({ kind, shakes: 0 });
   const shakes = tracked.kind !== kind && kind === "outbid" ? tracked.shakes + 1 : tracked.shakes;
   if (tracked.kind !== kind) setTracked({ kind, shakes });
+
+  // The shake runs imperatively on a stable wrapper so the label crossfade
+  // below is never interrupted by a remount.
+  const [scope, animate] = useAnimate();
+  useEffect(() => {
+    if (shakes === 0 || reduced) return;
+    animate(scope.current, { x: SHAKE_X }, shakeTransition);
+  }, [shakes, reduced, animate, scope]);
+
   return (
-    <motion.span
-      key={shakes}
-      animate={kind === "outbid" && !reduced && shakes > 0 ? { x: SHAKE_X } : { x: 0 }}
-      transition={shakeTransition}
-      className="inline-block"
-    >
+    <span ref={scope} className="inline-block">
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
           key={kind}
@@ -49,6 +53,6 @@ export function StatusChip({ kind }: { kind: ChipKind }) {
           {LABEL[kind]}
         </motion.span>
       </AnimatePresence>
-    </motion.span>
+    </span>
   );
 }

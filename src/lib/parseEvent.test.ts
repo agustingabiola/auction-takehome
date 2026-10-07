@@ -8,9 +8,9 @@ describe("parseEvent", () => {
       type: "RESET",
       durationMs: 5000,
     });
-    expect(parseEvent({ type: "BID_PLACED", bidder: "bob", amount: 1250 })).toEqual({
+    expect(parseEvent({ type: "BID_PLACED", bidder: "gaspar", amount: 1250 })).toEqual({
       type: "BID_PLACED",
-      bidder: "bob",
+      bidder: "gaspar",
       amount: 1250,
     });
     expect(parseEvent({ type: "BID_CANCELLED", bidId: "x" })).toEqual({
@@ -24,11 +24,13 @@ describe("parseEvent", () => {
   });
 
   it("strips unknown fields", () => {
-    expect(parseEvent({ type: "BID_PLACED", bidder: "bob", amount: 1250, admin: true })).toEqual({
-      type: "BID_PLACED",
-      bidder: "bob",
-      amount: 1250,
-    });
+    expect(parseEvent({ type: "BID_PLACED", bidder: "gaspar", amount: 1250, admin: true })).toEqual(
+      {
+        type: "BID_PLACED",
+        bidder: "gaspar",
+        amount: 1250,
+      },
+    );
   });
 
   it("rejects garbage", () => {
@@ -36,7 +38,7 @@ describe("parseEvent", () => {
     expect(parseEvent("RESET")).toBeNull();
     expect(parseEvent({ type: "NOPE" })).toBeNull();
     expect(parseEvent({ type: "BID_PLACED", bidder: "eve", amount: 1250 })).toBeNull();
-    expect(parseEvent({ type: "BID_PLACED", bidder: "bob", amount: "1250" })).toBeNull();
+    expect(parseEvent({ type: "BID_PLACED", bidder: "gaspar", amount: "1250" })).toBeNull();
     expect(parseEvent({ type: "BID_CANCELLED", bidId: "" })).toBeNull();
     expect(parseEvent({ type: "TIMER_ADJUSTED" })).toBeNull();
     expect(parseEvent({ type: "RESET", durationMs: "5000" })).toBeNull();

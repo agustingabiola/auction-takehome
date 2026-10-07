@@ -1,23 +1,32 @@
 @import "tailwindcss";
 
 @theme {
-  --color-paper: #f6f3ee;
-  --color-ink: #17171a;
-  --color-ink-soft: #5f5c57;
-  --color-oxblood: #8b1e2d;
-  --color-sand: #e9e2d6;
-  --color-sand-deep: #d9cfbf;
-  --color-warn: #b4541a;
+  /* One step up the gray ramp per layer: canvas, surface, control on a surface. */
+  --color-paper: #101828;
+  --color-sand: #1d2939;
+  --color-sand-deep: #344054;
+  --color-ink: #ffffff;
+  --color-ink-soft: #98a2b3;
+  --color-accent: #7a5af8;
+  --color-warn: #f79009;
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
 }
 
 html {
+  /* Painted on the document itself so the first paint matches the canvas. */
   background: var(--color-paper);
   color: var(--color-ink);
+  color-scheme: dark;
 }
 
 body {
   font-family: var(--font-sans);
   font-feature-settings: "tnum";
   -webkit-font-smoothing: antialiased;
+}
+
+/* Tailwind v4 removed the pointer cursor from its button reset; restore it. */
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+  cursor: pointer;
 }

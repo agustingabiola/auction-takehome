@@ -1,9 +1,9 @@
-export type BidderId = "bob" | "alice" | "randy";
+export type BidderId = "gaspar" | "agustin" | "belen";
 
 export const BIDDERS: Record<BidderId, { name: string }> = {
-  bob: { name: "Bob" },
-  alice: { name: "Alice" },
-  randy: { name: "Randy" },
+  agustin: { name: "Agustin" },
+  belen: { name: "Belen" },
+  gaspar: { name: "Gaspar" },
 };
 
 export const BIDDER_IDS = Object.keys(BIDDERS) as BidderId[];
@@ -12,15 +12,15 @@ export function isBidderId(v: unknown): v is BidderId {
   return typeof v === "string" && Object.prototype.hasOwnProperty.call(BIDDERS, v);
 }
 
-export const STARTING_PRICE = 1200; // whole dollars
-export const MIN_INCREMENT = 50; // the only increment; change it here
+export const STARTING_PRICE = 1200;
+export const MIN_INCREMENT = 50;
 export const DEFAULT_DURATION_MS = 3 * 60_000;
-export const TIMER_STEP_MS = 30_000; // one press of the auctioneer's minus or plus button
-export const SOFT_CLOSE_MS = 15_000; // stretch only
+export const TIMER_STEP_MS = 30_000;
+export const SOFT_CLOSE_MS = 15_000;
 
-export const LOT = {
-  title: "Walnut writing desk",
-  subtitle: "Lot 7 · c. 1950 · 142 cm",
+export const PROPERTY = {
+  title: "214 Maple Street",
+  subtitle: "3 bed · 2 bath · 1,840 sq ft · Austin, TX",
 };
 
 export type Bid = {
