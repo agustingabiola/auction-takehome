@@ -43,3 +43,4 @@ next-env.d.ts
 # planning docs and executor scratch (local only)
 docs/superpowers/
 .superpowers/
+.playwright-mcp/
